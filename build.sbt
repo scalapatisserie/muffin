@@ -1,8 +1,8 @@
 
 inThisBuild(
   Seq(
-    organization := "ru.tinkoff",
-    homepage := Some(url("https://github.com/Tinkoff/muffin")),
+    organization := "space.scalapatisserie",
+    homepage := Some(url("https://github.com/scalapatisserie/muffin")),
     description := "Mattermost API for Scala 3",
     developers := List(
       Developer(
@@ -14,7 +14,7 @@ inThisBuild(
     ),
     licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
     scmInfo :=
-      Some(ScmInfo(url("https://github.com/Tinkoff/muffin"), "scm:git@github.com:Tinkoff/muffin.git")),
+      Some(ScmInfo(url("https://github.com/scalapatisserie/muffin"), "scm:git@github.com:scalapatisserie/muffin.git")),
     Test / publishArtifact := false,
     credentials ++= Option(Path.userHome / ".sbt" / ".sonatype_credential")
       .filter(_.exists)
@@ -54,9 +54,11 @@ val skipPublish = Seq(
 lazy val root = (project in file("."))
   .settings(
     name := "muffin",
+    moduleName := name.value,
     skipPublish,
     commonSettings
   )
+  .enablePlugins(MdocPlugin, DocusaurusPlugin)
   .aggregate(
     `muffin-core`,
     `muffin-sttp-http-interop`,

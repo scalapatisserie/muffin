@@ -22,5 +22,6 @@ jobs:
 
       - name: Check formatting
         run: sbt fixCheck
+
       - name: Compile and test
         run: sbt test

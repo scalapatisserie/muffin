@@ -1,0 +1,26 @@
+name: Website
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 20
+          check-latest: true
+
+      - run: sbt docusaurusPublishGhpages
+
+      - uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./website/build
+          user_name: ${{ secrets.GIT_USER }}
+          user_email: ${{ secrets.GIT_USER }}

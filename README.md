@@ -2,7 +2,8 @@
 
 # Muffin
 
-[![Build](https://github.com/tinkoff/muffin/workflows/CI/badge.svg)](https://github.com/Tinkoff/muffin/actions?query=workflow%3ACI+branch%3Amaster)
+[![Build](https://github.com/scalapatisserie/muffin/workflows/CI/badge.svg)](https://github.com/scalapatisserie/muffin-original/actions?query=workflow%3ACI+branch%3Amaster)
+![Maven Central](https://img.shields.io/maven-central/v/space.scalapatisserie/muffin-core_3)
 ----
 
 Mattermost v4 API client for Scala 3.
@@ -13,15 +14,15 @@ Mattermost v4 API client for Scala 3.
 1. Add muffin to your project dependencies:
 
 ```sbt
-libraryDependencies += "ru.tinkoff" %% "muffin-core" % "latest version in badge"
+libraryDependencies += "space.scalapatisserie" %% "muffin-core" % "latest version in badge"
 ```
 
 2. Choose your integrations and include them, 
 for example circe, http4s, and sttp with AsyncHttpClientCatsBackend:
 
 ```sbt
-libraryDependencies += "ru.tinkoff" %% "muffin-circe-json-interop" % "latest version in badge"
-libraryDependencies += "ru.tinkoff" %% "muffin-sttp-http-interop" % "latest version in badge"
+libraryDependencies += "space.scalapatisserie" %% "muffin-circe-json-interop" % "latest version in badge"
+libraryDependencies += "space.scalapatisserie" %% "muffin-sttp-http-interop" % "latest version in badge"
 libraryDependencies += "com.softwaremill.sttp.client3" %% "async-http-client-backend-cats" % "3.7.6"
 ```
 
@@ -82,7 +83,7 @@ More examples [here](https://github.com/little-inferno/muffin/tree/oss/modules/e
 ### [circe](https://github.com/circe/circe)
 
 ```sbt
-libraryDependencies += "ru.tinkoff" %% "muffin-circe-json-interop" % "latest version in badge"
+libraryDependencies += "space.scalapatisserie" %% "muffin-circe-json-interop" % "latest version in badge"
 ```
 
 ```scala
@@ -92,7 +93,7 @@ import muffin.interop.circe.codec.given
 ### [zio-json](https://github.com/zio/zio-json)
 
 ```sbt
-libraryDependencies += "ru.tinkoff" %% "muffin-zio-json-interop" % "latest version in badge"
+libraryDependencies += "space.scalapatisserie" %% "muffin-zio-json-interop" % "latest version in badge"
 ```
 
 ```scala
@@ -104,7 +105,7 @@ import muffin.interop.zio.codec.given
 ### [http4s](https://github.com/http4s/http4s)
 
 ```sbt
-libraryDependencies += "ru.tinkoff" %% "muffin-http4s-http-interop" % "latest version in badge"
+libraryDependencies += "space.scalapatisserie" %% "muffin-http4s-http-interop" % "latest version in badge"
 ```
 
 ```scala
@@ -126,7 +127,7 @@ val server = EmberServerBuilder
 ### [zio-http](https://github.com/dream11/zio-http)
 
 ```sbt
-libraryDependencies += "ru.tinkoff" %% "muffin-zio-http-interop" % "latest version in badge"
+libraryDependencies += "space.scalapatisserie" %% "muffin-zio-http-interop" % "latest version in badge"
 ```
 
 ```scala
@@ -147,7 +148,7 @@ val server = Server.start(8080, ZioServer.routes(router, codec))
 ### [sttp](https://github.com/softwaremill/sttp)
 
 ```sbt
-libraryDependencies += "ru.tinkoff" %% "muffin-sttp-http-interop" % "latest version in badge"
+libraryDependencies += "space.scalapatisserie" %% "muffin-sttp-http-interop" % "latest version in badge"
 ```
 
 ```scala
@@ -163,5 +164,6 @@ val client = SttpClient[IO, IO, /* Supported json encoder */, /* Supported json 
 ## Copyright
 
 Copyright the maintainers
+Based on ![Tinkoff/muffin](https://github.com/tinkoff/muffin)
 
 Logos made by [Midjourney](https://discord.com/channels/662267976984297473/976997500349186119/1016053747639656498)

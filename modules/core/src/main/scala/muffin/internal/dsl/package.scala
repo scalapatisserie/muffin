@@ -55,8 +55,8 @@ trait MessageSyntax {
       id: Option[String] = None
   ): Action.Button =
     Action.Button(id.getOrElse(name), name, style)(integration(Integration) match {
-      case Integration.Url(url)          => RawIntegration(url, None)
-      case Integration.Context(url, ctx) => RawIntegration(url, Encode[T].apply(ctx).some)
+      case Integration.Url(url)          => RawIntegration(url, None).some
+      case Integration.Context(url, ctx) => RawIntegration(url, Encode[T].apply(ctx).some).some
     })
 
   def selectOptions[T: Encode](
@@ -66,8 +66,8 @@ trait MessageSyntax {
       id: Option[String] = None
   ): Action.Select =
     Action.Select(id.getOrElse(name), name, options)(integration(Integration) match {
-      case Integration.Url(url)          => RawIntegration(url, None)
-      case Integration.Context(url, ctx) => RawIntegration(url, Encode[T].apply(ctx).some)
+      case Integration.Url(url)          => RawIntegration(url, None).some
+      case Integration.Context(url, ctx) => RawIntegration(url, Encode[T].apply(ctx).some).some
     })
 
   def selectSource[T: Encode](
@@ -77,8 +77,8 @@ trait MessageSyntax {
       id: Option[String] = None
   ): Action.Select =
     Action.Select(id.getOrElse(name), name, dataSource = source(DataSource).some)(integration(Integration) match {
-      case Integration.Url(url)          => RawIntegration(url, None)
-      case Integration.Context(url, ctx) => RawIntegration(url, Encode[T].apply(ctx).some)
+      case Integration.Url(url)          => RawIntegration(url, None).some
+      case Integration.Context(url, ctx) => RawIntegration(url, Encode[T].apply(ctx).some).some
     })
 
   def attachment: AttachmentQuery = AttachmentQuery()

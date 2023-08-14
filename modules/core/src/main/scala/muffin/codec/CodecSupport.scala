@@ -478,7 +478,7 @@ trait CodecSupportLow[To[_], From[_]] extends PrimitivesSupport[To, From] {
         json[Action]
           .field("id", _ => button.id)
           .field("name", _ => button.name)
-          .field[RawIntegration]("integration", _ => button.raw)
+          .field[Option[RawIntegration]]("integration", _ => button.raw)
           .field("style", _ => button.style)
           .field("type", _ => "button")
           .build
@@ -486,7 +486,7 @@ trait CodecSupportLow[To[_], From[_]] extends PrimitivesSupport[To, From] {
         json[Action]
           .field("id", _ => select.id)
           .field("name", _ => select.name)
-          .field[RawIntegration]("integration", _ => select.raw)
+          .field[Option[RawIntegration]]("integration", _ => select.raw)
           .field("options", _ => select.options)
           .field("data_source", _ => select.dataSource)
           .field("type", _ => "select")
@@ -495,7 +495,7 @@ trait CodecSupportLow[To[_], From[_]] extends PrimitivesSupport[To, From] {
 
   given ActionFrom: From[Action] =
     parsing
-      .field[RawIntegration]("integration")
+      .field[Option[RawIntegration]]("integration")
       .field[String]("name")
       .field[String]("id")
       .field[String]("type")

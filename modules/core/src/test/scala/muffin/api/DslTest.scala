@@ -142,8 +142,8 @@ trait DslTest[To[_], From[_]](integration: String, codecSupport: CodecSupport[To
           Action.Button(
             "button",
             "button"
-          )(RawIntegration("url", """{"value1":"value","value2":123}""".some)),
-          Action.Select("select source", "select source", Nil, DataSource.Users.some)(RawIntegration("url2", None))
+          )(RawIntegration("url", """{"value1":"value","value2":123}""".some).some),
+          Action.Select("select source", "select source", Nil, DataSource.Users.some)(RawIntegration("url2", None).some)
         )
       )
 

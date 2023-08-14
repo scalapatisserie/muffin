@@ -30,7 +30,8 @@ function HomepageHeader() {
         </div>
         <div className={styles.badgeContainer}>
           <img alt="Build status" src="https://github.com/little-inferno/muffin/workflows/CI/badge.svg"/>
-          <img alt="Maven Central" src="https://img.shields.io/maven-central/v/space.scalapatisserie/muffin-core_3"/>
+          <img alt="Sonatype Nexus (Releases)" src="https://img.shields.io/nexus/r/space.scalapatisserie/muffin-core_3?server=https%3A%2F%2Fs01.oss.sonatype.org&label=release"/>
+          <img alt="Sonatype Nexus (Snapshots)" src="https://img.shields.io/nexus/s/space.scalapatisserie/muffin-core_3?server=https%3A%2F%2Fs01.oss.sonatype.org&label=snapshot"/>
         </div>
 
       </div>

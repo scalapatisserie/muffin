@@ -3,7 +3,8 @@
 # Muffin
 
 [![Build](https://github.com/scalapatisserie/muffin/workflows/CI/badge.svg)](https://github.com/scalapatisserie/muffin-original/actions?query=workflow%3ACI+branch%3Amaster)
-![Maven Central](https://img.shields.io/maven-central/v/space.scalapatisserie/muffin-core_3)
+![Sonatype Nexus (Releases)](https://img.shields.io/nexus/r/space.scalapatisserie/muffin-core_3?server=https%3A%2F%2Fs01.oss.sonatype.org&label=release)
+![Sonatype Nexus (Snapshots)](https://img.shields.io/nexus/s/space.scalapatisserie/muffin-core_3?server=https%3A%2F%2Fs01.oss.sonatype.org&label=snapshot)
 ----
 
 Mattermost v4 API client for Scala 3.

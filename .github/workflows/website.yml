@@ -2,7 +2,7 @@ name: Website
 
 on:
   push:
-    branches: [main]
+    branches: [master]
 
 jobs:
   publish:

@@ -58,7 +58,7 @@ sealed trait Action {
   val id: String
   val name: String
 
-  def integrationUrl: String
+  def integrationUrl: Option[String]
   def integrationContext[T: Decode]: Option[T]
 }
 
@@ -68,17 +68,17 @@ object Action {
       id: String,
       name: String,
       style: Style = Style.Default
-  )(private[muffin] val raw: RawIntegration)
+  )(private[muffin] val raw: Option[RawIntegration])
     extends Action {
 
-    def integrationUrl: String = raw.url
+    def integrationUrl: Option[String] = raw.map(_.url)
 
-    def integrationContext[T: Decode]: Option[T] = raw.ctx.flatMap(Decode[T].apply(_).toOption)
+    def integrationContext[T: Decode]: Option[T] = raw.flatMap(_.ctx).flatMap(Decode[T].apply(_).toOption)
 
     def setIntegration[T: Encode](integration: Integration[T]): Button =
       Button(id, name, style)(integration match {
-        case Integration.Url(url)          => RawIntegration(url, None)
-        case Integration.Context(url, ctx) => RawIntegration(url, Encode[T].apply(ctx).some)
+        case Integration.Url(url)          => RawIntegration(url, None).some
+        case Integration.Context(url, ctx) => RawIntegration(url, Encode[T].apply(ctx).some).some
       })
 
   }
@@ -88,17 +88,17 @@ object Action {
       name: String,
       options: List[SelectOption] = Nil,
       dataSource: Option[DataSource] = None
-  )(private[muffin] val raw: RawIntegration)
+  )(private[muffin] val raw: Option[RawIntegration])
     extends Action {
 
-    def integrationUrl: String = raw.url
+    def integrationUrl: Option[String] = raw.map(_.url)
 
-    def integrationContext[T: Decode]: Option[T] = raw.ctx.flatMap(Decode[T].apply(_).toOption)
+    def integrationContext[T: Decode]: Option[T] = raw.flatMap(_.ctx).flatMap(Decode[T].apply(_).toOption)
 
     def setIntegration[T: Encode](integration: Integration[T]): Select =
       Select(id, name, options, dataSource)(integration match {
-        case Integration.Url(url)          => RawIntegration(url, None)
-        case Integration.Context(url, ctx) => RawIntegration(url, Encode[T].apply(ctx).some)
+        case Integration.Url(url)          => RawIntegration(url, None).some
+        case Integration.Context(url, ctx) => RawIntegration(url, Encode[T].apply(ctx).some).some
       })
 
   }

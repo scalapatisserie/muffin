@@ -81,22 +81,12 @@
                     "text": "Синий"
                   }
                 ],
-                "integration": {
-                  "context": {
-                    "int": 123,
-                    "str": "str"
-                  },
-                  "url": "url2"
-                },
                 "name": "select",
                 "id": "select"
               },
               {
                 "type": "button",
                 "style": "danger",
-                "integration": {
-                  "url": "url"
-                },
                 "name": "button",
                 "id": "customId"
               }

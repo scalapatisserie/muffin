@@ -16,9 +16,9 @@ inThisBuild(
     scmInfo :=
       Some(ScmInfo(url("https://github.com/scalapatisserie/muffin"), "scm:git@github.com:scalapatisserie/muffin.git")),
     Test / publishArtifact := false,
-    credentials ++= Option(Path.userHome / ".sbt" / ".sonatype_credential")
-      .filter(_.exists)
-      .map(Credentials.apply)
+    sonatypeCredentialHost := "s01.oss.sonatype.org",
+    sonatypeRepository := "https://s01.oss.sonatype.org/service/local",
+    versionScheme := Some("semver-spec")
   )
 )
 
@@ -26,7 +26,6 @@ addCommandAlias("fixCheck", "scalafmtCheckAll")
 addCommandAlias("fix", "scalafmtAll")
 
 val commonSettings = Seq(
-  version := "0.3.0",
   scalaVersion := "3.3.0",
   scalacOptions ++= Seq(
     "-explain",
@@ -37,14 +36,7 @@ val commonSettings = Seq(
     "-Werror",
     "-language:implicitConversions",
     "-feature"
-  ),
-  publishMavenStyle := true,
-  publishTo := {
-    if (isSnapshot.value)
-      MavenRepository("sonatype-snapshots", Resolver.SonatypeRepositoryRoot + "/snapshots").some
-    else
-      sonatypePublishToBundle.value
-  }
+  )
 )
 
 val skipPublish = Seq(

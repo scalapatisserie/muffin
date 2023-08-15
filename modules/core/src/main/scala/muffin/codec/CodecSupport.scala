@@ -423,7 +423,7 @@ trait CodecSupportLow[To[_], From[_]] extends PrimitivesSupport[To, From] {
 
   given MessageActionFrom[T: From]: From[MessageAction[T]] =
     parsing
-      .field[T]("context")
+      .field[Option[T]]("context")
       .field[String]("type")
       .field[String]("data_source")
       .field[String]("trigger_id")
@@ -434,7 +434,22 @@ trait CodecSupportLow[To[_], From[_]] extends PrimitivesSupport[To, From] {
       .field[ChannelId]("channel_id")
       .field[Login]("user_name")
       .field[UserId]("user_id")
-      .build(MessageAction[T].apply.tupled)
+      .build {
+        case userId *: userName *: channelId *: channelName *: teamId *: teamDomain *: postId *: trigger *: data *: typ *: context *: EmptyTuple =>
+          MessageAction(
+            userId,
+            userName,
+            channelId,
+            channelName,
+            teamId,
+            teamDomain,
+            postId,
+            trigger,
+            data,
+            typ,
+            context.getOrElse(().asInstanceOf[Nothing])
+          )
+      }
 
   given AppResponseTo: To[AppResponse] =
     seal {

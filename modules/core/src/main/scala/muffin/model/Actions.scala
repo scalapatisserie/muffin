@@ -84,10 +84,11 @@ case class DialogAction[T](
     userId: UserId,
     channelId: ChannelId,
     teamId: TeamId,
-    submission: Map[String, String],
+    submission: Map[String, Option[String]],
     cancelled: Boolean
 ) {
 
-  def submission[T](key: String)(using ds: DialogSubmission[T]): Option[T] = submission.get(key).flatMap(ds.get)
+  def submission[T](key: String)(using ds: DialogSubmission[T]): Option[T] =
+    submission.get(key).flatMap(_.flatMap(ds.get))
 
 }

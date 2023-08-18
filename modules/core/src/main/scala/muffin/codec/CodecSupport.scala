@@ -423,7 +423,7 @@ trait CodecSupportLow[To[_], From[_]] extends PrimitivesSupport[To, From] {
       .field[Option[String]]("callback_id")
       .build(DialogAction[T].apply.tupled)
 
-  given MessageActionFrom[T: From]: From[MessageAction[T]] =
+  given MessageActionFrom[T: From]: From[MessageAction.Raw[T]] =
     parsing
       .field[Option[T]]("context")
       .field[String]("type")
@@ -436,29 +436,14 @@ trait CodecSupportLow[To[_], From[_]] extends PrimitivesSupport[To, From] {
       .field[ChannelId]("channel_id")
       .field[Login]("user_name")
       .field[UserId]("user_id")
-      .build {
-        case userId *: userName *: channelId *: channelName *: teamId *: teamDomain *: postId *: trigger *: data *: typ *: context *: EmptyTuple =>
-          MessageAction(
-            userId,
-            userName,
-            channelId,
-            channelName,
-            teamId,
-            teamDomain,
-            postId,
-            trigger,
-            data,
-            typ,
-            context.getOrElse(().asInstanceOf[Nothing])
-          )
-      }
+      .build(MessageAction.Raw[T].apply.tupled)
 
   given AppResponseTo: To[AppResponse] =
     seal {
       case AppResponse.Ok()                                     =>
         json[AppResponse]
           .build
-      case AppResponse.Message(text, responseType, attachments) =>
+      case AppResponse.Message(responseType, text, attachments) =>
         json[AppResponse]
           .field("text", _ => text)
           .field("response_type", _ => responseType)

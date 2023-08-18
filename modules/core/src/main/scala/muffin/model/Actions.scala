@@ -2,19 +2,50 @@ package muffin.model
 
 import cats.syntax.all.given
 
-case class MessageAction[T](
-    userId: UserId,
-    userName: Login,
-    channelId: ChannelId,
-    channelName: String,
-    teamId: TeamId,
-    teamDomain: String,
-    postId: MessageId,
-    triggerId: String,
-    dataSource: String,
-    `type`: String,
-    context: T
-)
+object MessageAction {
+
+  private[muffin] case class Raw[T](
+      userId: UserId,
+      userName: Login,
+      channelId: ChannelId,
+      channelName: String,
+      teamId: TeamId,
+      teamDomain: String,
+      postId: MessageId,
+      triggerId: String,
+      dataSource: String,
+      `type`: String,
+      context: Option[T]
+  )
+
+  case class Context[T](
+      userId: UserId,
+      userName: Login,
+      channelId: ChannelId,
+      channelName: String,
+      teamId: TeamId,
+      teamDomain: String,
+      postId: MessageId,
+      triggerId: String,
+      dataSource: String,
+      `type`: String,
+      context: T
+  )
+
+  case class NoContext(
+      userId: UserId,
+      userName: Login,
+      channelId: ChannelId,
+      channelName: String,
+      teamId: TeamId,
+      teamDomain: String,
+      postId: MessageId,
+      triggerId: String,
+      dataSource: String,
+      `type`: String
+  )
+
+}
 
 case class CommandAction(
     channelId: ChannelId,

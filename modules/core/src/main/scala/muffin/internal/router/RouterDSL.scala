@@ -43,11 +43,32 @@ object Handle {
         )
       }
 
-    transparent inline def action[In](
-        inline value: H => MessageAction[In] => F[AppResponse]
+    transparent inline def actionWithNoContext(
+        inline value: H => MessageAction.NoContext => F[AppResponse]
+    ): Handle[F, H, N, CommandName, ? <: Tuple, Nothing *: ActionIn, DialogName, DialogIn] =
+      ${
+        Handle.actionWithNoContext[
+          F,
+          H,
+          N,
+          CommandName,
+          ActionName,
+          ActionIn,
+          DialogName,
+          DialogIn,
+        ](
+          'value,
+          '{
+            h.h
+          }
+        )
+      }
+
+    transparent inline def actionWithContext[In](
+        inline value: H => MessageAction.Context[In] => F[AppResponse]
     ): Handle[F, H, N, CommandName, ? <: Tuple, In *: ActionIn, DialogName, DialogIn] =
       ${
-        Handle.action[
+        Handle.actionWithContext[
           F,
           H,
           N,
@@ -125,9 +146,33 @@ object Handle {
     }
   }
 
-  def action[F[_]
+  def actionWithNoContext[F[_]
+    : Type, H: Type, N <: Singleton: Type, CommandName <: Tuple: Type, ActionName <: Tuple: Type, ActionIn <: Tuple: Type, DialogName <: Tuple: Type, DialogIn <: Tuple: Type](
+      fun: Expr[H => MessageAction.NoContext => F[AppResponse]],
+      handle: Expr[H]
+  )(using Quotes) = {
+    import quotes.reflect.*
+
+    functionName(fun.asTerm.underlying) match {
+      case '[name] =>
+        '{
+          Handle[
+            F,
+            H,
+            N,
+            CommandName,
+            name *: ActionName,
+            Nothing *: ActionIn,
+            DialogName,
+            DialogIn
+          ]($handle)
+        }
+    }
+  }
+
+  def actionWithContext[F[_]
     : Type, H: Type, N <: Singleton: Type, In: Type, CommandName <: Tuple: Type, ActionName <: Tuple: Type, ActionIn <: Tuple: Type, DialogName <: Tuple: Type, DialogIn <: Tuple: Type](
-      fun: Expr[H => MessageAction[In] => F[AppResponse]],
+      fun: Expr[H => MessageAction.Context[In] => F[AppResponse]],
       handle: Expr[H]
   )(using Quotes) = {
     import quotes.reflect.*

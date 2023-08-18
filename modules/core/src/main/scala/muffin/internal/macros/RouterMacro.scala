@@ -139,7 +139,8 @@ class RouterMacro[F[_]: Type, G[_]: Type, T: Type](
   ): List[Term] =
     Type.of[In] match {
       case '[headIn *: tailIn] =>
-        val decoder = summonGiven[Decode[MessageAction[headIn]]]
+        val decoder = summonGiven[Decode[MessageAction.Raw[headIn]]]
+
         val encoder = summonGiven[Encode[AppResponse]]
 
         val method = getMethodSymbol[H](names.head)
@@ -148,16 +149,51 @@ class RouterMacro[F[_]: Type, G[_]: Type, T: Type](
 
         '{
           $monadThrowF.map {
-            $monadThrowF.flatMap($monadThrowF.fromEither($decoder.apply($rawActionExpr.data))) { action =>
+            $monadThrowF.flatMap($monadThrowF.fromEither($decoder.apply($rawActionExpr.data))) { raw =>
               ${
-                handler
-                  .select(method)
-                  .appliedTo(
-                    '{
-                      action
-                    }.asTerm
-                  )
-                  .asExprOf[F[AppResponse]]
+                Type.of[headIn] match {
+                  case '[Nothing] =>
+                    handler
+                      .select(method)
+                      .appliedTo(
+                        '{
+                          MessageAction.NoContext(
+                            raw.userId,
+                            raw.userName,
+                            raw.channelId,
+                            raw.channelName,
+                            raw.teamId,
+                            raw.teamDomain,
+                            raw.postId,
+                            raw.triggerId,
+                            raw.dataSource,
+                            raw.`type`
+                          )
+                        }.asTerm
+                      )
+                      .asExprOf[F[AppResponse]]
+                  case _          =>
+                    handler
+                      .select(method)
+                      .appliedTo(
+                        '{
+                          MessageAction.Context(
+                            raw.userId,
+                            raw.userName,
+                            raw.channelId,
+                            raw.channelName,
+                            raw.teamId,
+                            raw.teamDomain,
+                            raw.postId,
+                            raw.triggerId,
+                            raw.dataSource,
+                            raw.`type`,
+                            raw.context.get
+                          )
+                        }.asTerm
+                      )
+                      .asExprOf[F[AppResponse]]
+                }
               }
             }
           }(res => HttpResponse($encoder.apply(res)))

@@ -415,7 +415,7 @@ trait CodecSupportLow[To[_], From[_]] extends PrimitivesSupport[To, From] {
   given DialogContextFrom[T: From]: From[DialogAction[T]] =
     parsing
       .field[Boolean]("cancelled")
-      .field[Map[String, String]]("submission")
+      .field[Map[String, Option[String]]]("submission")
       .field[TeamId]("team_id")
       .field[ChannelId]("channel_id")
       .field[UserId]("user_id")

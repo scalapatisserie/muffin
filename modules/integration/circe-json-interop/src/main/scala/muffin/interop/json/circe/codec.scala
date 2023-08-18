@@ -137,6 +137,9 @@ trait CodecLow2 extends CodecSupport[Encoder, Decoder] {
     def field[X: Decoder](name: String): JsonResponseBuilder[Decoder, X *: Decoders] =
       CirceResponseBuilder[X *: Decoders](decoders.flatMap(all => Decoder[X].at(name).map(_ *: all)))
 
+    def fieldMap[X: Decoder, B](name: String)(f: X => B): JsonResponseBuilder[Decoder, B *: Decoders] =
+      CirceResponseBuilder[B *: Decoders](decoders.flatMap(all => Decoder[X].at(name).map(x => f(x) *: all)))
+
     def rawField(name: String): JsonResponseBuilder[Decoder, Option[String] *: Decoders] =
       CirceResponseBuilder[Option[String] *: Decoders] {
         decoders.flatMap(all =>

@@ -124,6 +124,12 @@ trait CodecLow extends CodecSupport[JsonEncoder, JsonDecoder] {
         summon[JsonDecoder[X]].asInstanceOf[JsonDecoder[Any]] :: decoders
       )
 
+    def fieldMap[X: JsonDecoder, B](name: String)(f: X => B): JsonResponseBuilder[JsonDecoder, B *: Params] =
+      new ZioResponseBuilder[B *: Params](
+        name :: stateNames,
+        summon[JsonDecoder[X]].map(f).asInstanceOf[JsonDecoder[Any]] :: decoders
+      )
+
     override def internal[X: JsonDecoder](name: String): JsonResponseBuilder[JsonDecoder, X *: Params] =
       new ZioResponseBuilder[X *: Params](
         name :: stateNames,

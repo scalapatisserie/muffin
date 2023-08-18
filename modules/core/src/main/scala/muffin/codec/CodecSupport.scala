@@ -49,6 +49,8 @@ trait JsonRequestBuilder[T, To[_]]() { self =>
 trait JsonResponseBuilder[From[_], Params <: Tuple] {
   def field[X: From](name: String): JsonResponseBuilder[From, X *: Params]
 
+  def fieldMap[X: From, B](name: String)(f: X => B): JsonResponseBuilder[From, B *: Params]
+
   def rawField(name: String): JsonResponseBuilder[From, Option[String] *: Params]
 
   def internal[X: From](name: String): JsonResponseBuilder[From, X *: Params]
@@ -586,7 +588,7 @@ trait CodecSupportLow[To[_], From[_]] extends PrimitivesSupport[To, From] {
 
   given AttachmentFrom: From[Attachment] =
     parsing
-      .field[List[Action]]("actions")
+      .fieldMap[Option[List[Action]], List[Action]]("actions")(_.getOrElse(Nil))
       .field[Option[String]]("footer_icon")
       .field[Option[String]]("footer")
       .field[Option[String]]("thumb_url")

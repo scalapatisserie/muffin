@@ -58,6 +58,24 @@ class ApiClient[F[_]: Concurrent, To[_], From[_]](http: HttpClient[F, To, From],
       Map("Authorization" -> s"Bearer ${cfg.auth}")
     )
 
+  def postToThread(
+      channelId: ChannelId,
+      rootPostId: MessageId,
+      message: Option[String] = None,
+      props: Props = Props.empty
+  ): F[Post] =
+    http.request(
+      cfg.baseUrl + "/posts",
+      Method.Post,
+      jsonRaw
+        .field("channel_id", channelId)
+        .field("message", message)
+        .field("props", props)
+        .field("root_id", rootPostId)
+        .build,
+      Map("Authorization" -> s"Bearer ${cfg.auth}")
+    )
+
   def channel(userIds: List[UserId]): F[ChannelInfo] =
     if (userIds.size == 2)
       http.request[List[UserId], ChannelInfo](

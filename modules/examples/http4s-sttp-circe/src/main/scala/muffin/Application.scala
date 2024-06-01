@@ -37,7 +37,7 @@ object Application extends IOApp {
 
       given ZoneId = ZoneId.systemDefault()
       cfg          = ClientConfig("url", "token", "botname", "url")
-      api          = new ApiClient(client, cfg)(codec)
+      api          = new ApiClient.Live(client, cfg)(codec)
 
       handler    = SimpleCommandHandler(api)
       timeHandle = handle(handler, "kek").command(_.time)

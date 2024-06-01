@@ -34,7 +34,7 @@ object Application extends ZIOAppDefault {
 
       given ZoneId = ZoneId.systemDefault()
 
-      api = new ApiClient(client, cfg)(codec)
+      api = new ApiClient.Live(client, cfg)(codec)
 
       handler = SimpleCommandHandler(api)
 

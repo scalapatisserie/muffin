@@ -38,7 +38,7 @@ trait ApiTest[To[_], From[_]](integration: String, codecSupport: CodecSupport[To
     perPage = 1
   )
 
-  private val apiClient = new ApiClient[IO, To, From](httpClient, config)(codecSupport)
+  private val apiClient = new ApiClient.Live[IO, To, From](httpClient, config)(codecSupport)
 
   Feature("reactions") {
     Scenario(s"create in $integration", Tag(integration)) {

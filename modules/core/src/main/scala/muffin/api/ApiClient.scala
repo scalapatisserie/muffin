@@ -8,6 +8,7 @@ import fs2.*
 
 import muffin.codec.*
 import muffin.http.*
+import muffin.http.Method.Get
 import muffin.model.*
 
 trait ApiClient[F[_], To[_], From[_]] {
@@ -173,6 +174,8 @@ trait ApiClient[F[_], To[_], From[_]] {
   def updateRole(id: String, permissions: List[String]): F[RoleInfo]
 
   def getRoles(names: List[String]): F[List[RoleInfo]]
+
+  def websocket(): F[WebsocketBuilder[F, To, From]]
 }
 
 object ApiClient {
@@ -800,7 +803,23 @@ object ApiClient {
         Body.Json(names),
         Map("Authorization" -> s"Bearer ${cfg.auth}")
       )
+
     //  Roles
+    // WebSocket
+    /*
+    Every call is a new websocket connection
+     */
+    def websocket(): F[WebsocketBuilder[F, To, From]] =
+      Websocket
+        .ConnectionBuilder
+        .build(
+          http,
+          Map("Authorization" -> s"Bearer ${cfg.auth}"),
+          codec,
+          cfg.baseUrl,
+          cfg.websocketConnection.retryPolicy.backoffSettings
+        )
+    // WebSocket
 
   }
 

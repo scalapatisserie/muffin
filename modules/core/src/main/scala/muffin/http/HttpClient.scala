@@ -1,9 +1,14 @@
 package muffin.http
 
+import java.net.URI
+
 import cats.Show
 import cats.syntax.all.given
 
-trait HttpClient[F[_], To[_], From[_]] {
+import muffin.api.BackoffSettings
+import muffin.model.websocket.domain.*
+
+trait HttpClient[F[_], -To[_], From[_]] {
 
   def request[In: To, Out: From](
       url: String,
@@ -13,6 +18,17 @@ trait HttpClient[F[_], To[_], From[_]] {
       params: Params => Params = identity
   ): F[Out]
 
+  def websocketWithListeners(
+      uri: URI,
+      headers: Map[String, String] = Map.empty,
+      backoffSettings: BackoffSettings,
+      listeners: List[EventListener[F]]
+  ): F[Unit]
+
+}
+
+trait EventListener[F[_]] {
+  def onEvent(event: Event[RawJson]): F[Unit]
 }
 
 sealed trait Body[+T]

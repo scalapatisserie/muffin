@@ -1,4 +1,4 @@
 import Dependencies._
 
 
-libraryDependencies ++= sttp :: Nil
+libraryDependencies ++= sttp

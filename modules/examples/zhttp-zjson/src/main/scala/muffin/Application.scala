@@ -1,6 +1,7 @@
 package muffin
 
 import java.time.{LocalDateTime, ZoneId}
+import scala.concurrent.duration.given
 
 import cats.effect.*
 
@@ -30,7 +31,20 @@ object Application extends ZIOAppDefault {
     (for {
       client <- ZioClient[Any, Task, JsonEncoder, JsonDecoder](codec)
 
-      cfg = ClientConfig("url", "token", "botname", "url")
+      cfg = ClientConfig(
+        "url",
+        "token",
+        "botname",
+        "url",
+        WebsocketConnectionConfig(
+          RetryPolicy(
+            BackoffSettings(
+              1.second,
+              4.second
+            )
+          )
+        )
+      )
 
       given ZoneId = ZoneId.systemDefault()
 
@@ -38,11 +52,11 @@ object Application extends ZIOAppDefault {
 
       handler = SimpleCommandHandler(api)
 
-      router <- handle(handler, "kek").command(_.time).in[RHttp[Client], Task]()
+      router <- handle(handler, "kek").command(_.time).in[RHttp[Client & Scope], Task]()
 
       routes = ZioRoutes.routes(router)
       _ <- Server.serve(routes)
     } yield _root_.zio.ExitCode.success)
-      .provide(Server.default, Client.default)
+      .provide(Server.default, Client.default, Scope.default)
 
 }

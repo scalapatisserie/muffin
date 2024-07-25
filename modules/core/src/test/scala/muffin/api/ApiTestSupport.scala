@@ -60,7 +60,7 @@ trait ApiTestSupport extends AsyncFeatureSpec {
 
   protected def testRequest(url: String, method: Method, request: Option[String], params: Params): IO[String] =
     for {
-      testObject  <- loadResource(s"$url/$method.json")
+      testObject  <- loadResource(s"""${url.replace(raw"http://", "")}/$method.json""")
       requestBody <- request.traverse[IO, Json](parseJson(_))
       expected    <- parseJson[List[TestObject]](testObject)
 

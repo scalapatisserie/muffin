@@ -1,21 +1,27 @@
 package muffin.interop.json.zio
 
+import java.net.URI
+
 import cats.effect.IO
 import cats.syntax.all.*
 
 import org.scalatest.*
 import org.scalatest.featurespec.AsyncFeatureSpec
+import zio.*
 import zio.json.*
 
-import muffin.api.ApiTest
-import muffin.http.{Body, HttpClient, Method, Params}
+import muffin.api.{domain, ApiTest, BackoffSettings}
+import muffin.http.{Body, EventListener, HttpClient, Method, Params}
+import muffin.model.websocket.domain.*
 
 class ZioApiTest extends ApiTest[JsonEncoder, JsonDecoder]("zio", codec) {
 
   protected def toContext: JsonEncoder[AppContext]   = JsonEncoder.derived[AppContext]
   protected def fromContext: JsonDecoder[AppContext] = JsonDecoder.derived[AppContext]
 
-  protected def httpClient: HttpClient[IO, JsonEncoder, JsonDecoder] =
+  protected def httpClient: HttpClient[IO, JsonEncoder, JsonDecoder] = {
+    given JsonEncoder[domain.TestObject] = JsonEncoder.derived
+
     new HttpClient[IO, JsonEncoder, JsonDecoder] {
 
       def request[In: JsonEncoder, Out: JsonDecoder](
@@ -38,6 +44,21 @@ class ZioApiTest extends ApiTest[JsonEncoder, JsonDecoder]("zio", codec) {
           }
         )
 
+      def websocketWithListeners(
+          uri: URI,
+          headers: Map[String, String],
+          backoffSettings: BackoffSettings,
+          listeners: List[EventListener[IO]]
+      ): IO[Unit] = events.traverse_(event => listeners.traverse_(_.onEvent(event)))
+
+      private val events = List(
+        Event(
+          EventType.Hello,
+          RawJson.from(domain.TestObject.default.toJson)
+        )
+      )
+
     }
+  }
 
 }

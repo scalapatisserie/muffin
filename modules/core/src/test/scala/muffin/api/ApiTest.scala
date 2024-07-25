@@ -1,17 +1,23 @@
 package muffin.api
 
 import java.time.ZoneId
+import scala.concurrent.Future
 
+import cats.effect.Deferred
 import cats.effect.IO
+import cats.effect.std.Queue
 import cats.syntax.all.*
 
+import concurrent.duration.given
 import org.scalatest.{Assertion, Succeeded, Tag}
 import org.scalatest.featurespec.AsyncFeatureSpec
 
 import muffin.codec.*
 import muffin.dsl.*
+import muffin.error.MuffinError
 import muffin.http.*
 import muffin.model.*
+import muffin.model.websocket.domain.*
 
 trait ApiTest[To[_], From[_]](integration: String, codecSupport: CodecSupport[To, From]) extends ApiTestSupport {
   protected def httpClient: HttpClient[IO, To, From]
@@ -21,20 +27,27 @@ trait ApiTest[To[_], From[_]](integration: String, codecSupport: CodecSupport[To
   case class AppContext(int: Int, str: String)
 
   protected def toContext: To[AppContext]
+
   protected def fromContext: From[AppContext]
 
   object AppContext {
     given Encode[AppContext] = EncodeTo(toContext)
+
     given Decode[AppContext] = DecodeFrom(fromContext)
   }
 
   private given ZoneId = ZoneId.of("UTC")
 
   private val config = ClientConfig(
-    baseUrl = "http/test",
+    baseUrl = "http://http/test",
     auth = "auth",
     botName = "testbot",
     serviceUrl = "service",
+    WebsocketConnectionConfig(
+      RetryPolicy(
+        BackoffSettings(2.seconds, 6.seconds)
+      )
+    ),
     perPage = 1
   )
 
@@ -260,6 +273,71 @@ trait ApiTest[To[_], From[_]](integration: String, codecSupport: CodecSupport[To
         emojis =>
           assert(emojis.size == 1)
       }
+    }
+  }
+
+  Feature("websocket") {
+    given From[domain.TestObject] =
+      parsing
+        .field[String]("field")
+        .build[domain.TestObject] {
+          case field *: EmptyTuple => domain.TestObject.apply(field)
+        }
+
+    Scenario(s"process websocket event $integration") {
+      for {
+        listenedEvent  <- Deferred[IO, domain.TestObject]
+        websocketFiber <- apiClient
+          .websocket()
+          .flatMap(
+            _.addListener[domain.TestObject](
+              EventType.Hello,
+              event => listenedEvent.complete(event).void
+            )
+              .connect()
+              .start
+          )
+        event          <- listenedEvent.get.timeout(2.seconds)
+        _              <- websocketFiber.join
+      } yield assert(event == domain.TestObject.default)
+    }
+
+    Scenario(s"Different connections work independent $integration") {
+      val badEvent = domain.TestObject("broken")
+      for {
+        listenedEvents       <- Queue.unbounded[IO, domain.TestObject]
+        brokenWebsocketFiber <- apiClient
+          .websocket()
+          .flatMap(
+            _.addListener[String](
+              EventType.Hello,
+              event =>
+                listenedEvents.offer(domain.TestObject.default)
+            )
+              .connect()
+              .recoverWith {
+                case _: MuffinError.Decoding => listenedEvents.offer(badEvent)
+              }
+              .start
+          )
+
+        workingWebsocketFiber <- apiClient
+          .websocket()
+          .flatMap(
+            _.addListener[domain.TestObject](
+              EventType.Hello,
+              event => listenedEvents.offer(event)
+            )
+              .connect()
+              .start
+          )
+
+        _      <- brokenWebsocketFiber.join *> workingWebsocketFiber.join
+        events <- listenedEvents.tryTakeN(2.some).timeout(1.second)
+      } yield assert(
+        events.contains(domain.TestObject.default) &&
+          events.contains(badEvent)
+      )
     }
   }
 

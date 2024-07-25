@@ -9,6 +9,7 @@ import muffin.error.MuffinError
 import muffin.http.*
 import muffin.internal.*
 import muffin.model.*
+import muffin.model.websocket.domain.*
 
 trait Encode[A] {
   def apply(obj: A): String
@@ -612,9 +613,19 @@ trait CodecSupportLow[To[_], From[_]] extends PrimitivesSupport[To, From] {
         case id *: message *: props *: EmptyTuple => Post(id, message, props.getOrElse(Props.empty))
       }
 
+  given EventFrom[A: From]: From[Event[A]] =
+    parsing
+      .field[A]("data")
+      .field[String]("event")
+      .build {
+        case eventType *: data *: EmptyTuple => Event(EventType.fromSnakeCase(eventType), data)
+      }
+
 }
 
 trait PrimitivesSupport[To[_], From[_]] extends NewTypeSupport[To, From] {
+  given RawJsonFrom: From[RawJson]
+
   given StringTo: To[String]
 
   given StringFrom: From[String]

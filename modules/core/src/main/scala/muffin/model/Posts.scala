@@ -23,10 +23,7 @@ case class Post(
     //  hashtag: Option[String],
     //  file_ids: List[String],
     //  pending_post_id: Option[String],
-//      metadata: PostMetadata
 )
-
-case class PostMetadata(reactions: Option[ReactionInfo])
 
 case class Props(attachments: List[Attachment] = Nil)
 

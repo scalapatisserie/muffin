@@ -10,6 +10,7 @@ import zio.json.internal.*
 import muffin.codec.*
 import muffin.error.MuffinError
 import muffin.http.Body
+import muffin.model.websocket.domain.RawJson
 
 object codec extends CodecLow {
   given NothingTo: JsonEncoder[Nothing] = UnitTo.asInstanceOf[JsonEncoder[Nothing]]
@@ -26,6 +27,8 @@ trait CodecLow extends CodecSupport[JsonEncoder, JsonDecoder] {
   given UnitTo: JsonEncoder[Unit] = (_, _, _) => ()
 
   given UnitFrom: JsonDecoder[Unit] = (_, _) => ()
+
+  given RawJsonFrom: JsonDecoder[RawJson] = JsonDecoder[Json].map(json => RawJson.from(json.toJson))
 
   given StringTo: JsonEncoder[String] = JsonEncoder.string
 

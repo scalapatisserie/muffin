@@ -25,7 +25,10 @@ object Dependencies {
     val scalatest = "3.2.15"
   }
 
-  val sttp = "com.softwaremill.sttp.client3" %% "core" % Version.sttp
+  val sttp = Seq(
+    "com.softwaremill.sttp.client3" %% "core"                          % Version.sttp,
+    "com.softwaremill.sttp.client3" %% "async-http-client-backend-fs2" % Version.sttp
+  )
 
   object http4s {
     val core = "org.http4s" %% "http4s-core" % Version.http4s

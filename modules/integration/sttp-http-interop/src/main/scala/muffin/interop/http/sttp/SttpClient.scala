@@ -1,19 +1,31 @@
 package muffin.interop.http.sttp
 
-import cats.MonadThrow
-import cats.effect.Sync
-import cats.syntax.all.given
+import java.net.URI
+import scala.util.chaining.given
 
+import cats.{MonadThrow, Parallel}
+import cats.data.NonEmptyList
+import cats.effect.{Sync, Temporal}
+import cats.syntax.all.given
+import fs2.*
+
+import sttp.capabilities.WebSockets
+import sttp.capabilities.fs2.Fs2Streams
 import sttp.client3.*
 import sttp.model.{Method as SMethod, Uri}
+import sttp.ws.WebSocketFrame
 
+import muffin.api.BackoffSettings
 import muffin.codec.*
 import muffin.error.MuffinError
 import muffin.http.*
 import muffin.internal.syntax.*
+import muffin.model.websocket.domain.*
 
-class SttpClient[F[_]: MonadThrow, To[_], From[_]](backend: SttpBackend[F, Any], codec: CodecSupport[To, From])
-  extends HttpClient[F, To, From] {
+class SttpClient[F[_]: Temporal: Parallel, To[_], From[_]](
+    backend: SttpBackend[F, Fs2Streams[F] & WebSockets],
+    codec: CodecSupport[To, From]
+) extends HttpClient[F, To, From] {
 
   import codec.given
 
@@ -70,12 +82,86 @@ class SttpClient[F[_]: MonadThrow, To[_], From[_]](backend: SttpBackend[F, Any],
       }
   }
 
+  def websocketWithListeners(
+      uri: URI,
+      headers: Map[String, String] = Map.empty,
+      backoffSettings: BackoffSettings,
+      listeners: List[EventListener[F]] = Nil
+  ): F[Unit] = {
+    val websocketEventProcessing: Pipe[F, WebSocketFrame.Data[?], WebSocketFrame] = { input =>
+      input.flatMap {
+        case WebSocketFrame.Text(payload, _, _) =>
+          Stream.eval(
+            Decode[Event[RawJson]].apply(payload).liftTo[F] >>= {
+              event =>
+                listeners
+                  .parTraverse(
+                    _.onEvent(event)
+                      .attempt
+                      .map(
+                        _.leftMap(err =>
+                          MuffinError.Websockets.ListenerError(err.getMessage, event.eventType, err)
+                        )
+                      )
+                  ) >>= {
+                  _.collect { case Left(err) => err }
+                    .pipe(NonEmptyList.fromList)
+                    .traverse_(
+                      MuffinError.Websockets.FailedWebsocketProcessing(_).raiseError[F, Unit]
+                    )
+                }
+            }
+          ) *>
+          Stream.empty
+
+        case _ => Stream.empty
+      }
+    }
+
+    val request = basicRequest
+      .headers(headers)
+      .response(
+        asWebSocketStream(Fs2Streams[F])(
+          websocketEventProcessing
+        )
+          .mapLeft(MuffinError.Websockets.Websocket(_))
+      )
+      .get(uri"${uri.toString}")
+      .send(backend)
+      .map(_.body)
+      .flatMap {
+        case Left(error)  => MonadThrow[F].raiseError(error)
+        case Right(value) => value.pure[F]
+      }
+
+    retryWithBackoff(request, backoffSettings)
+
+  }
+
+  private def retryWithBackoff[A](f: F[A], backoffSettings: BackoffSettings): F[A] =
+    f
+      .handleErrorWith {
+        case _: SttpClientException.ConnectException |
+            _: SttpClientException.TimeoutException |
+            _: SttpClientException.ReadException =>
+          Temporal[F].sleep(
+            backoffSettings.initialDelay min backoffSettings.maxDelayThreshold
+          ) *> retryWithBackoff(
+            f,
+            backoffSettings
+              .copy(initialDelay =
+                (backoffSettings.initialDelay * backoffSettings.multiply) min backoffSettings.maxDelayThreshold
+              )
+          )
+      }
+      .flatMap(_ => retryWithBackoff(f, backoffSettings))
+
 }
 
 object SttpClient {
 
-  def apply[I[_]: Sync, F[_]: MonadThrow, To[_], From[_]](
-      backend: SttpBackend[F, Any],
+  def apply[I[_]: Sync, F[_]: Temporal: Parallel, To[_], From[_]](
+      backend: SttpBackend[F, Fs2Streams[F] & WebSockets],
       codec: CodecSupport[To, From]
   ): I[SttpClient[F, To, From]] = Sync[I].delay(new SttpClient[F, To, From](backend, codec))
 

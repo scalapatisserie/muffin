@@ -1,5 +1,7 @@
 package muffin.interop.json.circe
 
+import java.net.URI
+
 import cats.effect.IO
 import cats.syntax.all.*
 
@@ -7,13 +9,18 @@ import io.circe.*
 import org.scalatest.*
 import org.scalatest.featurespec.AsyncFeatureSpec
 
-import muffin.api.ApiTest
-import muffin.http.{Body, HttpClient, Method, Params}
+import muffin.api.*
+import muffin.http.{Body, EventListener, HttpClient, Method, Params}
+import muffin.model.websocket.domain.{Event, EventType}
+import muffin.model.websocket.domain.RawJson
 
 class CirceApiTest extends ApiTest[Encoder, Decoder]("circe", codec) {
 
   protected def toContext: Encoder[AppContext]   = io.circe.Derivation.summonEncoder[AppContext]
   protected def fromContext: Decoder[AppContext] = io.circe.Derivation.summonDecoder[AppContext]
+
+  given Decoder[domain.TestObject] = Decoder.derived
+  given Encoder[domain.TestObject] = Encoder.AsObject.derived
 
   protected def httpClient: HttpClient[IO, Encoder, Decoder] =
     new HttpClient[IO, Encoder, Decoder] {
@@ -34,6 +41,20 @@ class CirceApiTest extends ApiTest[Encoder, Decoder]("circe", codec) {
           case Body.Multipart(parts) => ???
         }).flatMap(parseJson(_))
 
+      def websocketWithListeners(
+          uri: URI,
+          headers: Map[String, String],
+          backoffSettings: BackoffSettings,
+          listeners: List[EventListener[IO]]
+      ): IO[Unit] = events.traverse_(event => listeners.traverse_(_.onEvent(event)))
+
     }
+
+  private val events = List(
+    Event(
+      EventType.Hello,
+      RawJson.from(Encoder[domain.TestObject].apply(domain.TestObject.default).toString)
+    )
+  )
 
 }

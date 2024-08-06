@@ -13,6 +13,7 @@ import io.circe.syntax.given
 import muffin.codec.*
 import muffin.error.MuffinError
 import muffin.http.Body
+import muffin.model.websocket.domain.RawJson
 
 object codec extends codecLow1
 
@@ -43,6 +44,8 @@ trait CodecLow2 extends CodecSupport[Encoder, Decoder] {
   given UnitTo: Encoder[Unit] = Encoder.encodeUnit
 
   given UnitFrom: Decoder[Unit] = _ => Right(())
+
+  given RawJsonFrom: Decoder[RawJson] = Decoder.decodeJsonObject.map(obj => RawJson.from(obj.asJson.toString))
 
   given StringTo: Encoder[String] = Encoder.encodeString
 

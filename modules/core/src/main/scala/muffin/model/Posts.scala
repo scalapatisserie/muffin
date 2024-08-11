@@ -9,19 +9,19 @@ import muffin.codec.*
 
 case class Post(
     id: MessageId,
+    message: String,
     //  create_at: Long,
     //  update_at: Long,
     //  delete_at: Long,
     //  edit_at: Long,
-    //  user_id: UserId,
-    //  channel_id: ChannelId,
+    userId: UserId,
+    channelId: ChannelId,
+    fileIds: Option[List[FileId]],
     //  root_id: MessageId,
     //  original_id: MessageId,
-    message: String,
     //  `type`: String,
     props: Props = Props.empty
     //  hashtag: Option[String],
-    //  file_ids: List[String],
     //  pending_post_id: Option[String],
 )
 

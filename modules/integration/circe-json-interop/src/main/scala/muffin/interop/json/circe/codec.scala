@@ -3,7 +3,7 @@ package muffin.interop.json.circe
 import java.time.*
 
 import cats.arrow.FunctionK
-import cats.syntax.all.given
+import cats.syntax.all.*
 
 import io.circe.*
 import io.circe.Decoder.Result
@@ -140,8 +140,30 @@ trait CodecLow2 extends CodecSupport[Encoder, Decoder] {
     def field[X: Decoder](name: String): JsonResponseBuilder[Decoder, X *: Decoders] =
       CirceResponseBuilder[X *: Decoders](decoders.flatMap(all => Decoder[X].at(name).map(_ *: all)))
 
-    def fieldMap[X: Decoder, B](name: String)(f: X => B): JsonResponseBuilder[Decoder, B *: Decoders] =
-      CirceResponseBuilder[B *: Decoders](decoders.flatMap(all => Decoder[X].at(name).map(x => f(x) *: all)))
+    def fieldMap[X: Decoder, B](name: String)(
+        f: X => Either[MuffinError.Decoding, B]
+    ): JsonResponseBuilder[Decoder, B *: Decoders] =
+      CirceResponseBuilder[B *: Decoders](
+        for {
+          all <- decoders
+          x   <- Decoder[X].at(name).map(f)
+          b   <-
+            new Decoder[B] {
+              override def apply(c: HCursor): Result[B] = tryDecode(c)
+
+              override def tryDecode(c: ACursor): Result[B] =
+                x match {
+                  case Left(err)    =>
+                    DecodingFailure(
+                      DecodingFailure.Reason.CustomReason(s"Unable to parse field: $name due to ${err.message}"),
+                      c
+                    ).asLeft
+                  case Right(value) => value.asRight
+                }
+
+            }
+        } yield b *: all
+      )
 
     def rawField(name: String): JsonResponseBuilder[Decoder, Option[String] *: Decoders] =
       CirceResponseBuilder[Option[String] *: Decoders] {

@@ -64,6 +64,8 @@
     },
     "response": {
       "id": "34b52dfdd69f485bb0e70d1879",
+      "user_id": "34b52dfdd69f485bb0e70d1879",
+      "channel_id": "34b52dfdd69f485bb0e70d1879",
       "message": "message",
       "props": {
         "attachments": [

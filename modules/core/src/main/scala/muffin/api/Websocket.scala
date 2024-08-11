@@ -35,6 +35,8 @@ object Websocket {
 
     def connect(): F[Unit] = httpClient.websocketWithListeners(uri, headers, backoffSettings, listeners)
 
+    /** Can repeat listener in case server sends data to client. MM sends event of bot actions
+      */
     def addListener[EventData: From](
         eventType: EventType,
         onEventListener: EventData => F[Unit]

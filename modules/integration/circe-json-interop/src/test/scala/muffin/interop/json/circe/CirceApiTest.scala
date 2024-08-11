@@ -11,8 +11,7 @@ import org.scalatest.featurespec.AsyncFeatureSpec
 
 import muffin.api.*
 import muffin.http.{Body, EventListener, HttpClient, Method, Params}
-import muffin.model.websocket.domain.{Event, EventType}
-import muffin.model.websocket.domain.RawJson
+import muffin.model.websocket.domain.{Event, EventType, RawJson}
 
 class CirceApiTest extends ApiTest[Encoder, Decoder]("circe", codec) {
 
@@ -54,15 +53,21 @@ class CirceApiTest extends ApiTest[Encoder, Decoder]("circe", codec) {
           headers: Map[String, String],
           backoffSettings: BackoffSettings,
           listeners: List[EventListener[IO]]
-      ): IO[Unit] = events.traverse_(event => listeners.traverse_(_.onEvent(event)))
+      ): IO[Unit] = events.flatMap(_.traverse_(event => listeners.traverse_(_.onEvent(event))))
 
     }
 
-  private val events = List(
-    Event(
-      EventType.Hello,
-      RawJson.from(Encoder[domain.TestObject].apply(domain.TestObject.default).toString)
-    )
+  private val events = loadResource(
+    "websockets/posting/postingWithFileIds.json"
   )
+    .map(postingEvent =>
+      List(
+        Event(
+          EventType.Hello,
+          RawJson.from(Encoder[domain.TestObject].apply(domain.TestObject.default).toString)
+        ),
+        Event(EventType.Posted, RawJson.from(postingEvent))
+      )
+    )
 
 }

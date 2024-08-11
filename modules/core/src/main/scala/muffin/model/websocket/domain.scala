@@ -81,11 +81,12 @@ object domain {
 
   }
 
-}
+  case class PostedEventData(channelName: String, channelType: ChannelType, senderName: String, post: Post)
 
-case class PostedEventData(
-    channelName: String,
-    teamId: String,
-    senderName: String,
-    post: Post
-)
+  enum ChannelType {
+    case Direct
+    case Channel
+    case Unknown(repr: String)
+  }
+
+}

@@ -283,7 +283,7 @@ trait ApiTest[To[_], From[_]](integration: String, codecSupport: CodecSupport[To
         .build[domain.TestObject] {
           case field *: EmptyTuple => domain.TestObject.apply(field)
         }
-
+//
     Scenario(s"process websocket event $integration") {
       for {
         listenedEvent  <- Deferred[IO, domain.TestObject]
@@ -301,7 +301,7 @@ trait ApiTest[To[_], From[_]](integration: String, codecSupport: CodecSupport[To
         _              <- websocketFiber.join
       } yield assert(event == domain.TestObject.default)
     }
-
+//
     Scenario(s"Different connections work independent $integration") {
       val badEvent = domain.TestObject("broken")
       for {
@@ -338,6 +338,30 @@ trait ApiTest[To[_], From[_]](integration: String, codecSupport: CodecSupport[To
         events.contains(domain.TestObject.default) &&
           events.contains(badEvent)
       )
+    }
+
+    Scenario(s"process posting event with files $integration") {
+      for {
+        listenedEvent  <- Deferred[IO, PostedEventData]
+        websocketFiber <- apiClient
+          .websocket()
+          .flatMap(
+            _.addListener[PostedEventData](
+              EventType.Posted,
+              event => listenedEvent.complete(event).void
+            )
+              .connect()
+              .start
+          )
+        expected       <- loadResource(
+          "websockets/posting/postingWithFileIds.json"
+        )
+          .flatMap(raw =>
+            IO.fromEither(Decode[PostedEventData].apply(raw))
+          )
+        event          <- listenedEvent.get.timeout(2.seconds)
+        _              <- websocketFiber.join
+      } yield assert(event == expected)
     }
   }
 

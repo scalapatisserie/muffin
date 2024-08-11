@@ -12,7 +12,7 @@ import fs2.*
 import sttp.capabilities.WebSockets
 import sttp.capabilities.fs2.Fs2Streams
 import sttp.client3.*
-import sttp.model.{Method as SMethod, Uri}
+import sttp.model.{MediaType, Method as SMethod, Uri}
 import sttp.ws.WebSocketFrame
 
 import muffin.api.BackoffSettings
@@ -36,7 +36,44 @@ class SttpClient[F[_]: Temporal: Parallel, To[_], From[_]](
       headers: Map[String, String],
       params: Params => Params
   ): F[Out] = {
-    val req = basicRequest
+    val req = mkRequest(url, method, body, headers, params)
+      .response(asString.mapLeft(MuffinError.Http.apply))
+      .mapResponse(_.flatMap(Decode[Out].apply))
+
+    backend.send(req)
+      .map(_.body)
+      .flatMap {
+        case Left(error)  => MonadThrow[F].raiseError(error)
+        case Right(value) => value.pure[F]
+      }
+  }
+
+  def requestRawData[In: To](
+      url: String,
+      method: Method,
+      body: Body[In],
+      headers: Map[String, String],
+      params: Params => Params
+  ): F[Array[Byte]] = {
+    val req = mkRequest(url, method, body, headers, params)
+      .response(asByteArray.mapLeft(MuffinError.Http.apply))
+
+    backend.send(req)
+      .map(_.body)
+      .flatMap {
+        case Left(error)  => MonadThrow[F].raiseError(error)
+        case Right(value) => value.pure[F]
+      }
+  }
+
+  private def mkRequest[In: To, Out: From, R >: Fs2Streams[F] & WebSockets](
+      url: String,
+      method: Method,
+      body: Body[In],
+      headers: Map[String, String],
+      params: Params => Params
+  ) =
+    basicRequest
       .method(
         method match {
           case Method.Get    => SMethod.GET
@@ -65,22 +102,14 @@ class SttpClient[F[_]: Temporal: Parallel, To[_], From[_]](
                 .multipartBody(
                   parts.map {
                     case MultipartElement.StringElement(name, value) => multipart(name, value)
-                    case MultipartElement.FileElement(name, value)   => multipart(name, value)
+
+                    case MultipartElement.FileElement(name, payload) =>
+                      multipart(name, payload.content).fileName(payload.name)
                   }
                 )
-                .header("Content-Type", "multipart/form-data")
+                .contentType(MediaType.MultipartFormData)
           }
       }
-      .response(asString.mapLeft(MuffinError.Http.apply))
-      .mapResponse(_.flatMap(Decode[Out].apply))
-
-    backend.send(req)
-      .map(_.body)
-      .flatMap {
-        case Left(error)  => MonadThrow[F].raiseError(error)
-        case Right(value) => value.pure[F]
-      }
-  }
 
   def websocketWithListeners(
       uri: URI,

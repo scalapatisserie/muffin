@@ -1,6 +1,7 @@
 package muffin.interop.json.zio
 
 import java.time.{Instant, LocalDateTime, ZoneId}
+import scala.reflect.ClassTag
 
 import zio.json.*
 import zio.json.JsonDecoder.{JsonError, UnsafeJson}
@@ -57,6 +58,10 @@ trait CodecLow extends CodecSupport[JsonEncoder, JsonDecoder] {
   given IntTo: JsonEncoder[Int] = JsonEncoder.int
 
   given IntFrom: JsonDecoder[Int] = JsonDecoder.int
+
+  given ByteTo: JsonEncoder[Byte] = JsonEncoder.byte
+
+  given ByteFrom: JsonDecoder[Byte] = JsonDecoder.byte
 
   given LongTo: JsonEncoder[Long] = JsonEncoder.long
 

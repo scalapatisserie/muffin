@@ -58,7 +58,8 @@
               "fallback": "Duis aute irure dolor in reprehenderit"
             }
           ]
-        }
+        },
+        "file_ids": []
       }
     },
     "response": {

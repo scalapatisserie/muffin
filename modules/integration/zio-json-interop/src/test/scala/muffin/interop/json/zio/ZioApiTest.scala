@@ -44,6 +44,14 @@ class ZioApiTest extends ApiTest[JsonEncoder, JsonDecoder]("zio", codec) {
           }
         )
 
+      def requestRawData[In: JsonEncoder](
+          url: String,
+          method: Method,
+          body: Body[In],
+          headers: Map[String, String],
+          params: Params => Params
+      ): IO[Array[Byte]] = IO("wubba lubba dub dub".getBytes)
+
       def websocketWithListeners(
           uri: URI,
           headers: Map[String, String],

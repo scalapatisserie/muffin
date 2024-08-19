@@ -41,6 +41,14 @@ class CirceApiTest extends ApiTest[Encoder, Decoder]("circe", codec) {
           case Body.Multipart(parts) => ???
         }).flatMap(parseJson(_))
 
+      def requestRawData[In: Encoder](
+          url: String,
+          method: Method,
+          body: Body[In],
+          headers: Map[String, String],
+          params: Params => Params
+      ): IO[Array[Byte]] = IO("wubba lubba dub dub".getBytes)
+
       def websocketWithListeners(
           uri: URI,
           headers: Map[String, String],

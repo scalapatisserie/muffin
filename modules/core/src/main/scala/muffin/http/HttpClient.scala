@@ -6,6 +6,7 @@ import cats.Show
 import cats.syntax.all.given
 
 import muffin.api.BackoffSettings
+import muffin.model.FilePayload
 import muffin.model.websocket.domain.*
 
 trait HttpClient[F[_], -To[_], From[_]] {
@@ -17,6 +18,14 @@ trait HttpClient[F[_], -To[_], From[_]] {
       headers: Map[String, String] = Map.empty,
       params: Params => Params = identity
   ): F[Out]
+
+  def requestRawData[In: To](
+      url: String,
+      method: Method,
+      body: Body[In],
+      headers: Map[String, String],
+      params: Params => Params = identity
+  ): F[Array[Byte]]
 
   def websocketWithListeners(
       uri: URI,
@@ -44,7 +53,7 @@ sealed trait MultipartElement
 
 object MultipartElement {
   case class StringElement(name: String, value: String) extends MultipartElement
-  case class FileElement(name: String, value: Array[Byte]) extends MultipartElement
+  case class FileElement(name: String, value: FilePayload) extends MultipartElement
 }
 
 enum Method {

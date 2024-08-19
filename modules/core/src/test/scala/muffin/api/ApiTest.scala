@@ -341,4 +341,13 @@ trait ApiTest[To[_], From[_]](integration: String, codecSupport: CodecSupport[To
     }
   }
 
+  Feature("file api") {
+    Scenario(s"get file content") {
+      apiClient
+        .file(FileId("id"))
+        .map(bytes => new String(bytes))
+        .map(res => assert(res.contains("wubba lubba dub dub")))
+    }
+  }
+
 }

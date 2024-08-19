@@ -21,19 +21,22 @@ trait ApiClient[F[_], To[_], From[_]] {
   def postToDirect(
       userId: UserId,
       message: Option[String] = None,
-      props: Props = Props.empty
+      props: Props = Props.empty,
+      fileIds: List[FileId] = Nil
   ): F[Post]
 
   def postToChat(
       userIds: List[UserId],
       message: Option[String] = None,
-      props: Props = Props.empty
+      props: Props = Props.empty,
+      fileIds: List[FileId] = Nil
   ): F[Post]
 
   def postToChannel(
       channelId: ChannelId,
       message: Option[String] = None,
-      props: Props = Props.empty
+      props: Props = Props.empty,
+      fileIds: List[FileId] = Nil
   ): F[Post]
 
   def postToThread(
@@ -175,6 +178,15 @@ trait ApiClient[F[_], To[_], From[_]] {
 
   def getRoles(names: List[String]): F[List[RoleInfo]]
 
+  //  Roles
+  // Files
+
+  def file(id: FileId): F[Array[Byte]]
+
+  def uploadFile(req: UploadFileRequest): F[UploadFileResponse]
+
+  // Files
+
   def websocket(): F[WebsocketBuilder[F, To, From]]
 }
 
@@ -198,34 +210,42 @@ object ApiClient {
     def postToDirect(
         userId: UserId,
         message: Option[String] = None,
-        props: Props = Props.empty
+        props: Props = Props.empty,
+        fileIds: List[FileId] = Nil
     ): F[Post] =
       for {
         id   <- botId
         info <- channel(id :: userId :: Nil)
-        res  <- postToChannel(info.id, message, props)
+        res  <- postToChannel(info.id, message, props, fileIds)
       } yield res
 
     def postToChat(
         userIds: List[UserId],
         message: Option[String] = None,
-        props: Props = Props.empty
+        props: Props = Props.empty,
+        fileIds: List[FileId] = Nil
     ): F[Post] =
       for {
         id   <- botId
         info <- channel(id :: userIds)
-        res  <- postToChannel(info.id, message, props)
+        res  <- postToChannel(info.id, message, props, fileIds)
       } yield res
 
     def postToChannel(
         channelId: ChannelId,
         message: Option[String] = None,
-        props: Props = Props.empty
+        props: Props = Props.empty,
+        fileIds: List[FileId] = Nil
     ): F[Post] =
       http.request(
         cfg.baseUrl + "/posts",
         Method.Post,
-        jsonRaw.field("channel_id", channelId).field("message", message).field("props", props).build,
+        jsonRaw
+          .field("channel_id", channelId)
+          .field("message", message)
+          .field("file_ids", fileIds)
+          .field("props", props)
+          .build,
         Map("Authorization" -> s"Bearer ${cfg.auth}")
       )
 
@@ -396,7 +416,7 @@ object ApiClient {
         cfg.baseUrl + s"/emoji",
         Method.Post,
         Body.Multipart(
-          MultipartElement.FileElement("image", req.image) ::
+          MultipartElement.FileElement("image", FilePayload.fromBytes(req.image)) ::
             MultipartElement.StringElement(
               "emoji",
               jsonRaw.field("creator_id", req.creatorId).field("name", req.emojiName).build.value
@@ -805,6 +825,30 @@ object ApiClient {
       )
 
     //  Roles
+    // Files
+
+    def file(id: FileId): F[Array[Byte]] =
+      http.requestRawData[Nothing](
+        cfg.baseUrl + s"/files/$id",
+        Method.Get,
+        Body.Empty,
+        Map("Authorization" -> s"Bearer ${cfg.auth}")
+      )
+
+    def uploadFile(req: UploadFileRequest): F[UploadFileResponse] =
+      http.request[Nothing, UploadFileResponse](
+        cfg.baseUrl + "/files",
+        Method.Post,
+        Body.Multipart(
+          List(
+            MultipartElement.FileElement("files", req.payload),
+            MultipartElement.StringElement("channel_id", req.channelId.value)
+          )
+        ),
+        Map("Authorization" -> s"Bearer ${cfg.auth}")
+      )
+
+    // Files
     // WebSocket
     /*
     Every call is a new websocket connection

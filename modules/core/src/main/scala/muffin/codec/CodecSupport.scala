@@ -304,6 +304,24 @@ trait CodecSupportLow[To[_], From[_]] extends PrimitivesSupport[To, From] {
       .build(RoleInfo.apply.tupled)
   // Roles
 
+  // Files
+
+  given UploadFileResponseFrom: From[UploadFileResponse] =
+    parsing
+      .field[List[FileInfo]]("file_infos")
+      .build {
+        case infos *: EmptyTuple => UploadFileResponse(infos)
+      }
+
+  given FileInfoFrom: From[FileInfo] =
+    parsing
+      .field[String]("name")
+      .field[UserId]("user_id")
+      .field[FileId]("id")
+      .build(FileInfo.apply)
+
+  // Files
+
   given DialogTo: To[Dialog] =
     json[Dialog]
       .field("callback_id", _.callbackId)

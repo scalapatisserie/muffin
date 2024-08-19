@@ -32,6 +32,32 @@ class ZioClient[R, To[_], From[_]](codec: CodecSupport[To, From])
       params: Params => Params
   ): RIO[R with Client, Out] =
     for {
+      response <- mkRequest(url, method, body, headers, params)
+
+      stringResponse <- response.body.asString(Charset.defaultCharset())
+      res            <-
+        Decode[Out].apply(stringResponse) match {
+          case Left(value)  => ZIO.fail(value)
+          case Right(value) => ZIO.succeed(value)
+        }
+    } yield res
+
+  def requestRawData[In: To](
+      url: String,
+      method: Method,
+      body: Body[In],
+      headers: Map[String, String],
+      params: Params => Params
+  ): RIO[R with Client with Scope, Array[Byte]] = mkRequest(url, method, body, headers, params).flatMap(_.body.asArray)
+
+  private def mkRequest[In: To](
+      url: String,
+      method: Method,
+      body: Body[In],
+      headers: Map[String, String],
+      params: Params => Params
+  ) =
+    for {
       requestBody <-
         body match {
           case Body.Empty            => ZIO.attempt(ZBody.empty)
@@ -43,11 +69,12 @@ class ZioClient[R, To[_], From[_]](codec: CodecSupport[To, From])
               form = Form.apply(Chunk.fromIterable(
                 parts.map {
                   case MultipartElement.StringElement(name, value) => FormField.textField(name, value)
-                  case MultipartElement.FileElement(name, value)   =>
+                  case MultipartElement.FileElement(name, payload) =>
                     FormField.binaryField(
                       name,
-                      Chunk.fromArray(value),
-                      MediaType.apply("application", "octet-stream", false, true)
+                      Chunk.fromArray(payload.content),
+                      MediaType.apply("application", "octet-stream", false, true),
+                      filename = Some(payload.name)
                     )
                 }
               ))
@@ -67,14 +94,7 @@ class ZioClient[R, To[_], From[_]](codec: CodecSupport[To, From])
           Headers(headers.map(Header.Custom.apply).toList),
           content = requestBody
         )
-
-      stringResponse <- response.body.asString(Charset.defaultCharset())
-      res            <-
-        Decode[Out].apply(stringResponse) match {
-          case Left(value)  => ZIO.fail(value)
-          case Right(value) => ZIO.succeed(value)
-        }
-    } yield res
+    } yield response
 
   def websocketWithListeners(
       uri: URI,

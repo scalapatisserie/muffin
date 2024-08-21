@@ -1,0 +1,11 @@
+{
+  "channel_name": "awif8o9dxidst8suxf47gwc3gw__hpgdxehuti8huqei4yoyfcdcoc",
+  "channel_type": "D",
+  "sender_name": "@danil",
+  "post": "{\n    \"id\": \"6pzso8hr77gnirkntn1qe9hxso\",\n    \"create_at\": 1723751876786,\n    \"update_at\": 1723751876786,\n    \"edit_at\": 0,\n    \"delete_at\": 0,\n    \"is_pinned\": false,\n    \"user_id\": \"hpgdxehuti8huqei4yoyfcdcoc\",\n    \"channel_id\": \"rawjhctgq3ytpmgyfcyn3zowjc\",\n    \"root_id\": \"\",\n    \"original_id\": \"\",\n    \"message\": \"\",\n    \"type\": \"\",\n    \"props\": {\n      \"disable_group_highlight\": true\n    },\n    \"hashtags\": \"\",\n    \"file_ids\": [\n      \"a7frxuzgrp8ftkifpaxdemaphr\"\n    ],\n    \"pending_post_id\": \"hpgdxehuti8huqei4yoyfcdcoc:1723751876740\",\n    \"reply_count\": 0,\n    \"last_reply_at\": 0,\n    \"participants\": null,\n    \"metadata\": {\n      \"files\": [\n        {\n          \"id\": \"a7frxuzgrp8ftkifpaxdemaphr\",\n          \"user_id\": \"hpgdxehuti8huqei4yoyfcdcoc\",\n          \"post_id\": \"6pzso8hr77gnirkntn1qe9hxso\",\n          \"channel_id\": \"rawjhctgq3ytpmgyfcyn3zowjc\",\n          \"create_at\": 1723751875886,\n          \"update_at\": 1723751875886,\n          \"delete_at\": 0,\n          \"name\": \"docs.yaml\",\n          \"extension\": \"yaml\",\n          \"size\": 7850,\n          \"mime_type\": \"\",\n          \"mini_preview\": null,\n          \"remote_id\": \"\",\n          \"archived\": false\n        }\n      ]\n    }\n  }",
+  "channel_display_name": "@danil",
+  "mentions": "[\"awif8o9dxidst8suxf47gwc3gw\"]",
+  "otherFile": "true",
+  "set_online": true,
+  "team_id": ""
+}
